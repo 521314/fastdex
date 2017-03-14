@@ -49,6 +49,9 @@ public class ClassInject implements Opcodes {
         Files.walkFileTree(unzipDir.toPath(),new ClassInjectFileVisitor(project,sourceSetJavaFiles,unzipDir.toPath(),classesDir.toPath()))
         project.logger.error("==fastdex inject complete")
         project.ant.zip(baseDir: classesDir, destFile: outJar)
+
+        FileUtils.deleteDir(unzipDir)
+        FileUtils.deleteDir(classesDir)
     }
 
     private static class ClassInjectFileVisitor extends SimpleFileVisitor<Path> {

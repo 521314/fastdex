@@ -7,7 +7,7 @@ import com.dx168.fastdex.build.util.ClassInject
 import com.dx168.fastdex.build.util.Constant
 import com.dx168.fastdex.build.util.FastdexUtils
 import com.dx168.fastdex.build.util.GradleUtils
-import com.dx168.fastdex.build.util.JavaDirDiff
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import com.android.build.api.transform.Format
 import com.dx168.fastdex.build.util.FileUtils
@@ -30,48 +30,8 @@ class FastdexTransform extends TransformProxy {
     @Override
     void transform(TransformInvocation transformInvocation) throws TransformException, IOException, InterruptedException {
         if (FastdexUtils.hasValidCache(project,variantName)) {
-            //compare changed class
-            Set<String> result = new HashSet<>()
-            String[] srcDirs = project.android.sourceSets.main.java.srcDirs
-            File snapshootDir = new File(FastdexUtils.getBuildDir(project,variantName),Constant.FASTDEX_SNAPSHOOT_DIR)
-
-            Set<String> changedJavaClassNames = new HashSet<>()
-            for (String srcDir : srcDirs) {
-                File newDir = new File(srcDir)
-                File oldDir = new File(snapshootDir,srcDir)
-
-                changedJavaClassNames.addAll(JavaDirDiff.diff(newDir,oldDir,true,project.logger))
-            }
-            if (changedJavaClassNames.isEmpty()) {
-                base.transform(transformInvocation)
-                return
-            }
-
-            changedJavaClassNames.add(GradleUtils.getBuildConfigClassName(manifestPath))
-
-            //add all changed file to jar
-            File mergedJar = new File(FastdexUtils.getBuildDir(project,variantName),"latest-merged.jar")
-            FileUtils.deleteFile(mergedJar)
-            GradleUtils.executeMerge(transformInvocation,mergedJar)
-
-            File classesDir = new File(FastdexUtils.getBuildDir(project,variantName),"patch-" + Constant.FASTDEX_CLASSES_DIR)
-            FileUtils.deleteDir(classesDir)
-            FileUtils.ensumeDir(classesDir)
-
-            project.copy {
-                from project.zipTree(mergedJar)
-                for (String className : changedJavaClassNames) {
-                    include className
-                }
-
-                into classesDir
-            }
-            FileUtils.deleteFile(mergedJar)
-
-            File patchJar = new File(FastdexUtils.getBuildDir(project,variantName),"patch-combined.jar")
-            project.ant.zip(baseDir: classesDir, destFile: patchJar)
-
-            project.logger.error("==fastdex will generate dex file ${changedJavaClassNames}")
+            //get patch jar
+            File patchJar = generatePatchJar(transformInvocation)
 
             String dxcmd = "${project.android.getSdkDirectory()}/build-tools/${project.android.getBuildToolsVersion()}/dx"
 
@@ -136,8 +96,9 @@ class FastdexTransform extends TransformProxy {
                 project.logger.error("==fastdex ${sb}")
             }
             else {
+                throw new GradleException("==fastdex generate dex fail: \n${dxcmd}")
                 //fail
-                base.transform(transformInvocation)
+                //base.transform(transformInvocation)
             }
         }
         else {
@@ -147,15 +108,50 @@ class FastdexTransform extends TransformProxy {
 
             File injectedJar = new File(FastdexUtils.getBuildDir(project,variantName),"injected-combined.jar")
             ClassInject.injectJar(project,variantName,combinedJar, injectedJar)
+
+            FileUtils.deleteFile(combinedJar)
             createSourceSetSnapshoot()
             keepDependenciesList()
             //invoke the original transform method
             base.transform(GradleUtils.createNewTransformInvocation(this,transformInvocation,injectedJar))
             //save dex
-            copyDex(transformInvocation)
+            copyNormalBuildDex(transformInvocation)
             //save R.txt
             copyRTxt()
         }
+    }
+
+    File generatePatchJar(TransformInvocation transformInvocation) {
+        //compare changed class
+        Set<String> changedJavaClassNames = FastdexUtils.scanChangedClasses(project,variantName,manifestPath)
+        //add all changed file to jar
+        File mergedJar = new File(FastdexUtils.getBuildDir(project,variantName),"latest-merged.jar")
+
+        FileUtils.deleteFile(mergedJar)
+        GradleUtils.executeMerge(transformInvocation,mergedJar)
+
+        File classesDir = new File(FastdexUtils.getBuildDir(project,variantName),"patch-" + Constant.FASTDEX_CLASSES_DIR)
+        FileUtils.deleteDir(classesDir)
+        FileUtils.ensumeDir(classesDir)
+
+        project.copy {
+            from project.zipTree(mergedJar)
+            for (String className : changedJavaClassNames) {
+                include className
+            }
+
+            into classesDir
+        }
+        FileUtils.deleteFile(mergedJar)
+
+        File patchJar = new File(FastdexUtils.getBuildDir(project,variantName),"patch-combined.jar")
+        project.ant.zip(baseDir: classesDir, destFile: patchJar)
+
+        FileUtils.deleteDir(classesDir)
+
+        project.logger.error("==fastdex will generate dex file ${changedJavaClassNames}")
+
+        return patchJar
     }
 
     void copyRTxt() {
@@ -202,7 +198,7 @@ class FastdexTransform extends TransformProxy {
         return outputDir;
     }
 
-    void copyDex(TransformInvocation transformInvocation) {
+    void copyNormalBuildDex(TransformInvocation transformInvocation) {
         File dexOutputDir = getDexOutputDir(transformInvocation)
 
         project.logger.error("==fastdex dex output directory: " + dexOutputDir)

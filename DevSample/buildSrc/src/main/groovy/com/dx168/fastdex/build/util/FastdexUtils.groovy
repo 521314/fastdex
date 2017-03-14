@@ -56,4 +56,19 @@ public class FastdexUtils {
         File cachedDependListFile = new File(FastdexUtils.getBuildDir(project,variantName),Constant.DEPENDENCIES_MAPPING_FILENAME)
         return cachedDependListFile
     }
+
+    public static Set<String> scanChangedClasses(Project project,String variantName,String manifestPath) {
+        Set<String> result = new HashSet<>()
+        String[] srcDirs = project.android.sourceSets.main.java.srcDirs
+        File snapshootDir = new File(getBuildDir(project,variantName),Constant.FASTDEX_SNAPSHOOT_DIR)
+        Set<String> changedJavaClassNames = new HashSet<>()
+        for (String srcDir : srcDirs) {
+            File newDir = new File(srcDir)
+            File oldDir = new File(snapshootDir,srcDir)
+
+            changedJavaClassNames.addAll(JavaDirDiff.diff(newDir,oldDir,true,project.logger))
+        }
+        changedJavaClassNames.add(GradleUtils.getBuildConfigClassName(manifestPath))
+        return result
+    }
 }
