@@ -6,13 +6,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.Status
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformInput
-import com.android.build.gradle.internal.transforms.JarMerger
-import com.dx168.fastdex.build.util.FileUtils
 import com.google.common.collect.ImmutableList
-
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 
 /**
  * Created by tong on 17/10/3.

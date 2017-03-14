@@ -68,6 +68,7 @@ public class FastdexPrepareTask extends DefaultTask {
         }
         else {
             FastdexUtils.cleanCache(project,variantName)
+            FileUtils.ensumeDir(FastdexUtils.getBuildDir(project,variantName))
         }
     }
 
