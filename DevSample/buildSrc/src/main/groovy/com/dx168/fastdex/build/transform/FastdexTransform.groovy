@@ -190,20 +190,6 @@ class FastdexTransform extends TransformProxy {
         FileUtils.write2file(sb.toString().getBytes(),dependenciesListFile)
     }
 
-    Set<String> getCachedDependenciesList() {
-        Set<String> result = new HashSet<>()
-        File dependenciesListFile = new File(FastdexUtils.getBuildDir(project,variantName),Constant.DEPENDENCIES_MAPPING_FILENAME);
-        if (FileUtils.isLegalFile(dependenciesListFile.getAbsolutePath())) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(dependenciesListFile)))
-            String line = null
-            while ((line = reader.readLine()) != null) {
-                result.add(line)
-            }
-            reader.close()
-        }
-        return result
-    }
-
     File getDexOutputDir(TransformInvocation transformInvocation) {
         def outputProvider = transformInvocation.getOutputProvider();
         File outputDir = null;

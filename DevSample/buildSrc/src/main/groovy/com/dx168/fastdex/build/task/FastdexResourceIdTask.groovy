@@ -27,13 +27,22 @@ public class FastdexResourceIdTask extends DefaultTask {
     @TaskAction
     def applyResourceId() {
         File buildDir = FastdexUtils.getBuildDir(project,variantName)
+
         String resourceMappingFile = new File(buildDir,Constant.R_TXT)
 
         // Parse the public.xml and ids.xml
         if (!FileUtils.isLegalFile(resourceMappingFile)) {
-            project.logger.error("apply resource mapping file ${resourceMappingFile} is illegal, just ignore")
+            project.logger.error("==fastdex apply resource mapping file ${resourceMappingFile} is illegal, just ignore")
             return
         }
+
+        File idsXmlFile = new File(buildDir,RESOURCE_IDX_XML)
+        File publicXmlFile = new File(buildDir,RESOURCE_PUBLIC_XML)
+        if (FileUtils.isLegalFile(idsXmlFile) && FileUtils.isLegalFile(publicXmlFile)) {
+            project.logger.error("==fastdex public xml file and ids xml file already exist, just ignore")
+            return
+        }
+
         String idsXml = resDir + "/values/ids.xml";
         String publicXml = resDir + "/values/public.xml";
         FileUtils.deleteFile(idsXml);
@@ -41,7 +50,7 @@ public class FastdexResourceIdTask extends DefaultTask {
         List<String> resourceDirectoryList = new ArrayList<String>()
         resourceDirectoryList.add(resDir)
 
-        project.logger.error("we build ${project.getName()} apk with apply resource mapping file ${resourceMappingFile}")
+        project.logger.error("==fastdex we build ${project.getName()} apk with apply resource mapping file ${resourceMappingFile}")
         Map<RDotTxtEntry.RType, Set<RDotTxtEntry>> rTypeResourceMap = PatchUtil.readRTxt(resourceMappingFile)
 
         AaptResourceCollector aaptResourceCollector = AaptUtil.collectResource(resourceDirectoryList, rTypeResourceMap)
@@ -50,12 +59,12 @@ public class FastdexResourceIdTask extends DefaultTask {
 
 
         if (publicFile.exists()) {
-            FileUtils.copyFileUsingStream(publicFile, new File(buildDir,RESOURCE_PUBLIC_XML))
+            FileUtils.copyFileUsingStream(publicFile, publicXmlFile)
             project.logger.error("==fastdex gen resource public.xml in ${RESOURCE_PUBLIC_XML}")
         }
         File idxFile = new File(idsXml)
         if (idxFile.exists()) {
-            FileUtils.copyFileUsingStream(idxFile, new File(buildDir,RESOURCE_IDX_XML))
+            FileUtils.copyFileUsingStream(idxFile, idsXmlFile)
             project.logger.error("==fastdex gen resource idx.xml in ${RESOURCE_IDX_XML}")
         }
     }
