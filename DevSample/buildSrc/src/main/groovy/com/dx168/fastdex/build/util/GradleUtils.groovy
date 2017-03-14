@@ -10,6 +10,24 @@ import com.android.build.gradle.internal.transforms.JarMerger
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder
+import com.android.build.api.transform.DirectoryInput
+import com.android.build.api.transform.JarInput
+import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.Status
+import com.android.build.api.transform.TransformInput
+import com.android.build.api.transform.TransformInvocation
+import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder
+import com.dx168.fastdex.build.util.Constant
+import com.dx168.fastdex.build.util.FastdexUtils
+import com.dx168.fastdex.build.util.FileUtils
+import com.dx168.fastdex.build.util.GradleUtils
+import com.dx168.fastdex.build.util.JavaDirDiff
+import com.google.common.collect.ImmutableList
+import com.android.build.api.transform.Transform
+import org.gradle.api.Project
+
+
 
 /**
  * Created by tong on 17/3/14.
@@ -103,5 +121,63 @@ public class GradleUtils {
         jarMerger.setFilter(proxy);
 
         return jarMerger
+    }
+
+
+    public static TransformInvocation createNewTransformInvocation(Transform transform,TransformInvocation transformInvocation,File inputJar) {
+        TransformInvocationBuilder builder = new TransformInvocationBuilder(transformInvocation.getContext());
+        builder.addInputs(jarFileToInputs(transform,inputJar))
+        builder.addOutputProvider(transformInvocation.getOutputProvider())
+        builder.addReferencedInputs(transformInvocation.getReferencedInputs())
+        builder.addSecondaryInputs(transformInvocation.getSecondaryInputs())
+        builder.setIncrementalMode(transformInvocation.isIncremental())
+
+        return builder.build()
+    }
+
+    /**
+     * change the jar file to TransformInputs
+     */
+    private static Collection<TransformInput> jarFileToInputs(Transform transform,File jarFile) {
+        TransformInput transformInput = new TransformInput() {
+            @Override
+            Collection<JarInput> getJarInputs() {
+                JarInput jarInput = new JarInput() {
+                    @Override
+                    Status getStatus() {
+                        return Status.ADDED
+                    }
+
+                    @Override
+                    String getName() {
+                        return jarFile.getName().substring(0,
+                                jarFile.getName().length() - ".jar".length())
+                    }
+
+                    @Override
+                    File getFile() {
+                        return jarFile
+                    }
+
+                    @Override
+                    Set<QualifiedContent.ContentType> getContentTypes() {
+                        return transform.getInputTypes()
+                    }
+
+                    @Override
+                    Set<QualifiedContent.Scope> getScopes() {
+                        return transform.getScopes()
+                    }
+                }
+                return ImmutableList.of(jarInput)
+            }
+
+
+            @Override
+            Collection<DirectoryInput> getDirectoryInputs() {
+                return ImmutableList.of()
+            }
+        }
+        return ImmutableList.of(transformInput)
     }
 }
