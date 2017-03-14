@@ -1,7 +1,5 @@
 package com.dx168.fastdex.build.util
 
-import org.gradle.api.Project
-
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -14,34 +12,7 @@ import java.util.zip.ZipOutputStream;
  * Created by tong on 17/3/10.
  */
 public class FileUtils {
-    public static final String FASTDEX_BUILD_DIR = "fastdex"
-    public static final String FASTDEX_DEX_CACHE_DIR = "dex_cache"
-    public static final String FASTDEX_CLASSES_DIR = "classes"
-    public static final String FASTDEX_SNAPSHOOT_DIR = "snapshoot"
-    public static final String JAVA_SUFFIX = ".java"
-    public static final String CLASS_SUFFIX = ".class"
-    public static final String DEX_SUFFIX = ".dex"
-    public static final String R_TXT = "R.txt"
-    public static final String ANTILAZYLOAD_DEX_FILENAME = "fastdex-antilazyload.dex"
-    public static final String RUNTIME_DEX_FILENAME = "fastdex-runtime.dex"
-    public static final String DEPENDENCIES_MAPPING_FILENAME = "dependencies-mapping.txt"
-
     public static final int BUFFER_SIZE = 16384;
-
-    public static final File getFastdexBuildDir(Project project) {
-        File file = new File(project.getBuildDir(),FASTDEX_BUILD_DIR);
-        return file;
-    }
-
-    public static final File getFastdexBuildDir(Project project,String variantName) {
-        File file = new File(getFastdexBuildDir(project),variantName);
-        return file;
-    }
-
-    public static final File getDexCacheDir(Project project,String variantName) {
-        File file = new File(getFastdexBuildDir(project,variantName),FASTDEX_DEX_CACHE_DIR);
-        return file;
-    }
 
     public static final boolean ensumeDir(File file) {
         if (file == null) {
@@ -103,7 +74,13 @@ public class FileUtils {
         if (path == null) {
             return false;
         }
-        File file = new File(path);
+        return isLegalFile(new File(path));
+    }
+
+    public static boolean isLegalFile(File file) {
+        if (file == null) {
+            return false;
+        }
         return file.exists() && file.isFile() && file.length() > 0;
     }
 

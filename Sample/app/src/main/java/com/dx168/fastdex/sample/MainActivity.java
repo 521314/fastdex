@@ -22,6 +22,6 @@ public class MainActivity extends Activity {
 
 
         String s2 = getString(R.string.s2);
-        Toast.makeText(this,"haha" + " | " + s1 + " | " + s2 + " | " + s3,Toast.LENGTH_LONG).show();
+        Toast.makeText(this,"haha12" + " | " + s1 + " | " + s2 + " | " + s3,Toast.LENGTH_LONG).show();
     }
 }

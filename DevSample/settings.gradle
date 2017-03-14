@@ -1,4 +1,4 @@
 include ':app'
 project(':app').projectDir = new File("../Sample/app")
 
-include ':fastdex-runtime'
+include ':runtime'

@@ -6,6 +6,7 @@ import com.android.build.gradle.internal.transforms.DexTransform
 import com.dx168.fastdex.build.task.FastdexCleanTask
 import com.dx168.fastdex.build.task.FastdexCreateMaindexlistFileTask
 import com.dx168.fastdex.build.task.FastdexManifestTask
+import com.dx168.fastdex.build.task.FastdexPrepareTask
 import com.dx168.fastdex.build.task.FastdexResourceIdTask
 import com.dx168.fastdex.build.util.BuildTimeListener
 import org.gradle.api.GradleException
@@ -70,6 +71,15 @@ class FastdexPlugin implements Plugin<Project> {
                     project.logger.error("==fastdex disable fastdex [android.buildTypes${variantName.toLowerCase()}.minifyEnabled=true]")
                 }
                 else {
+                    //clean cache task(user trigger)
+                    FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
+                    cleanTask.variantName = variantName
+
+                    //prepare context
+                    FastdexPrepareTask prepareTask = project.tasks.create("fastdexPrepareTaskFor${variantName}", FastdexPrepareTask)
+                    prepareTask.variantName = variantName
+                    variant.assemble.dependsOn prepareTask
+
                     Task multidexlistTask = project.tasks.getByName("transformClassesWithMultidexlistFor${variantName}")
                     if (multidexlistTask != null) {
                         FastdexCreateMaindexlistFileTask createFileTask = project.tasks.create("fastdexCreate${variantName}MaindexlistFileTask", FastdexCreateMaindexlistFileTask)
@@ -78,9 +88,6 @@ class FastdexPlugin implements Plugin<Project> {
                         multidexlistTask.dependsOn createFileTask
                         multidexlistTask.enabled = false
                     }
-
-                    FastdexCleanTask fastdexCleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
-                    fastdexCleanTask.variantName = variantName
 
                     FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
                     manifestTask.manifestPath = variantOutput.processManifest.manifestOutputFile

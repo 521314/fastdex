@@ -44,31 +44,6 @@ public class TransformProxy extends Transform {
         return base.isIncremental()
     }
 
-    JarMerger getClassJarMerger(File jarFile) {
-        JarMerger jarMerger = new JarMerger(jarFile)
-
-        Class<?> zipEntryFilterClazz
-        try {
-            zipEntryFilterClazz = Class.forName("com.android.builder.packaging.ZipEntryFilter")
-        } catch (Throwable t) {
-            zipEntryFilterClazz = Class.forName("com.android.builder.signing.SignedJarBuilder\$IZipEntryFilter")
-        }
-
-        Class<?>[] classArr = new Class[1];
-        classArr[0] = zipEntryFilterClazz
-        InvocationHandler handler = new InvocationHandler(){
-            public Object invoke(Object proxy, Method method, Object[] args)
-                    throws Throwable {
-                return args[0].endsWith(FileUtils.CLASS_SUFFIX);
-            }
-        };
-        Object proxy = Proxy.newProxyInstance(zipEntryFilterClazz.getClassLoader(), classArr, handler);
-
-        jarMerger.setFilter(proxy);
-
-        return jarMerger
-    }
-
     /**
      * change the jar file to TransformInputs
      */

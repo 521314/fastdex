@@ -1,5 +1,6 @@
 package com.dx168.fastdex.build.task
 
+import com.dx168.fastdex.build.util.Constant
 import com.dx168.fastdex.build.util.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -7,6 +8,7 @@ import com.tencent.tinker.build.aapt.AaptResourceCollector
 import com.tencent.tinker.build.aapt.AaptUtil
 import com.tencent.tinker.build.aapt.PatchUtil
 import com.tencent.tinker.build.aapt.RDotTxtEntry
+import com.dx168.fastdex.build.util.FastdexUtils
 
 /**
  * Created by tong on 17/3/11.
@@ -24,8 +26,8 @@ public class FastdexResourceIdTask extends DefaultTask {
 
     @TaskAction
     def applyResourceId() {
-        File buildDir = FileUtils.getFastdexBuildDir(project,variantName)
-        String resourceMappingFile = new File(buildDir,FileUtils.R_TXT)
+        File buildDir = FastdexUtils.getBuildDir(project,variantName)
+        String resourceMappingFile = new File(buildDir,Constant.R_TXT)
 
         // Parse the public.xml and ids.xml
         if (!FileUtils.isLegalFile(resourceMappingFile)) {

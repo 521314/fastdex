@@ -4,7 +4,7 @@ import org.gradle.api.Project
 import java.nio.file.FileVisitResult
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.BasicFileAttributes
 
 /**
  * Created by tong on 17/3/12.
@@ -38,7 +38,7 @@ public class ClassInjectFileVisitor extends SimpleFileVisitor<Path> {
 
     @Override
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (!file.toFile().getName().endsWith(FileUtils.CLASS_SUFFIX)) {
+        if (!file.toFile().getName().endsWith(Constant.CLASS_SUFFIX)) {
             return FileVisitResult.CONTINUE;
         }
         Path relativePath = scanPath.relativize(file)
@@ -62,7 +62,7 @@ public class ClassInjectFileVisitor extends SimpleFileVisitor<Path> {
     boolean matchSourceSetJavaFile(Path relativePath) {
         //relativePath  like   com.dx168.fastdex.sample.MainActivity.class
         String className = relativePath.toString()
-        className = className.substring(0,className.length() - FileUtils.CLASS_SUFFIX.length())
+        className = className.substring(0,className.length() - Constant.CLASS_SUFFIX.length())
         //className => com.dx168.fastdex.sample.MainActivity
         boolean result = sourceSetJavaFiles.contains(className)
 

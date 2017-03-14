@@ -5,6 +5,7 @@ import groovy.xml.QName
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import com.dx168.fastdex.build.util.FileUtils
+import com.dx168.fastdex.build.util.FastdexUtils
 
 /**
  * Created by tong on 17/3/11.
@@ -59,11 +60,10 @@ public class FastdexManifestTask extends DefaultTask {
         }
         File manifestFile = new File(manifestPath)
         if (manifestFile.exists()) {
-            File buildDir = FileUtils.getFastdexBuildDir(project,variantName)
+            File buildDir = FastdexUtils.getBuildDir(project,variantName)
             FileUtils.copyFileUsingStream(manifestFile, new File(buildDir,MANIFEST_XML))
             project.logger.error("fastdex gen AndroidManifest.xml in ${MANIFEST_XML}")
         }
-
     }
 }
 
